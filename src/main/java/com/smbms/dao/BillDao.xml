@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.smbms.dao.BillDao">
+    <cache eviction="FIFO" flushInterval="60000" readOnly="false" size="2048"></cache>
+
+    <resultMap id="billTest" type="bill">
+        <result property="id" column="id"></result>
+        <result property="productName" column="productName"></result>
+        <result property="productName" column="productName"></result>
+        <result property="isPayment" column="isPayment"></result>
+        <result property="totalPrice" column="totalPrice"></result>
+        <result property="providerName" column="proName"></result>
+        <association property="provider" javaType="provider">
+            <result property="proCode" column="proCode"></result>
+            <result property="proName" column="proName"></result>
+            <result property="proContact" column="proContact"></result>
+            <result property="proPhone" column="proPhone"></result>
+        </association>
+    </resultMap>
+
+<!--    根据商品名称进行模糊查询-->
+    <select id="selectByProductNameBills" resultMap="billTest" parameterType="string">
+        select * from
+            smbms_bill b,
+            smbms_provider p
+                <trim prefix="where" suffix="and b.providerId = p.id;">
+                b.productName like concat('%',#{productName},'%')
+                </trim>
+    </select>
+
+
+</mapper>

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.smbms.dao.UserDao">
+    <cache eviction="FIFO" flushInterval="60000" readOnly="false" size="2048"></cache>
+
+    <resultMap id="userList" type="user">
+        <result property="id" column="id"></result>
+        <result property="userCode" column="userCode"></result>
+        <result property="userName" column="userName"></result>
+        <result property="userPassword" column="userPassword"></result>
+        <result property="userRole" column="userRole"></result>
+        <!--        <collection property="roleName" ofType="com.smbms.pojo.Role">-->
+        <!--            <result column="roleName" property="roleName"></result>-->
+        <!--        </collection>-->
+        <result property="roleName" column="roleName"></result>
+    </resultMap>
+
+    <resultMap id="userTest" type="user">
+        <result property="id" column="id"></result>
+        <result property="userCode" column="userCode"></result>
+        <result property="userName" column="userName"></result>
+        <result property="userPassword" column="userPassword"></result>
+        <result property="userRole" column="userRole"></result>
+        <association property="role" resultMap="roleMapping"></association>
+    </resultMap>
+    <resultMap id="roleMapping" type="role">
+        <result property="id" column="roleId"></result>
+        <result property="roleName" column="roleName"></result>
+        <result property="roleCode" column="roleCode"></result>
+    </resultMap>
+
+<!--    <resultMap id="billList" type="bill">-->
+<!--        <result property="id" column="id"></result>-->
+<!--        <result property="providerName" column="proName"></result>-->
+<!--    </resultMap>-->
+
+    <insert id="add" parameterType="com.smbms.pojo.User">
+        insert into smbms_user
+            (
+             userCode,
+             userName,
+             userPassword
+             )
+             values
+                    (
+                     #{userCode},
+                     #{userName},
+                     #{userPassword}
+                     );
+    </insert>
+
+<!--    <insert id="addProvider" parameterType="provider">-->
+<!--        insert into smbms_provider(proCode, proName, proDesc, proContact, proPhone, proAddress, proFax, createdBy, creationDate, modifyDate, modifyBy) values (#{proCode},#{proName},#{proDesc},#{proContact},#{proPhone},#{proAddress},#{proFax},#{createdBy},#{creationDate},#{modifyDate},#{modifyBy});-->
+<!--    </insert>-->
+
+
+    <update id="updateUser" parameterType="user">
+        update smbms_user
+            <trim prefix="set" suffixOverrides="," suffix="where id = #{id};">
+                <if test="userCode != null">
+                    userCode = #{userCode},
+                </if>
+                <if test="userName != null">
+                    userName = #{userName},
+                </if>
+            </trim>
+    </update>
+
+
+    <update id="updateProvider" parameterType="provider">
+        update smbms_provider
+            <set>
+                proCode = #{proCode},
+                proName = #{proName},
+                proDesc = #{proDesc},
+                proContact = #{proContact},
+                proPhone = #{proPhone},
+                proAddress = #{proAddress},
+                proFax = #{proFax},
+                modifyDate = #{modifyDate},
+                modifyBy = #{modifyBy}
+            </set>
+            <where>
+                id = #{id}
+            </where>
+    </update>
+
+
+    <update id="updateUserPassword">
+        update smbms_user
+            <set>
+                userPassword = #{userPassword}
+            </set>
+            where id = ${id};
+    </update>
+    <delete id="deleteByUserId" parameterType="int">
+        delete from smbms_user where id = #{id};
+    </delete>
+<!--    <delete id="deleteByProviderId">-->
+<!--        delete from smbms_provider where id = #{id};-->
+<!--    </delete>-->
+
+
+<!--根据用户名模糊查询-->
+    <select id="selectByUserName" resultType="user" parameterType="string">
+        select * from smbms_user where userName like concat('%',#{username},'%');
+    </select>
+
+    <!--登录 -->
+    <select id="login" resultType="user" parameterType="map">
+        select * from smbms_user
+            <where>
+                1 = 1
+                <if test="userCode!=null">
+                    and userCode = #{userCode}
+                </if>
+                <if test="userPassword!=null">
+                    and userPassword = #{userPassword};
+                </if>
+            </where>
+    </select>
+
+<!--查询带有rolename的数据-->
+    <select id="selectByIdDuo" parameterType="int" resultMap="userList">
+        select * from smbms_user u, smbms_role r where u.id = #{id} and u.userRole = r.id;
+    </select>
+
+
+
+
+<!--    <select id="selectByProductName" resultMap="billList" parameterType="string">-->
+<!--        select b.id, b.productName, p.proName, b.totalPrice, b.isPayment, b.creationDate from smbms_bill b, smbms_provider p where productName like concat('%',#{productName},'%') and b.providerId = p.id;-->
+<!--    </select>-->
+
+
+    <select id="selectByRoleId" resultMap="userTest" parameterType="int">
+        select * from smbms_user u, smbms_role r where r.id = u.userRole and r.id = #{id};
+    </select>
+
+<!--    <resultMap id="billTest" type="bill">-->
+<!--        <result property="id" column="id"></result>-->
+<!--        <result property="productName" column="productName"></result>-->
+<!--        <result property="productName" column="productName"></result>-->
+<!--        <result property="isPayment" column="isPayment"></result>-->
+<!--        <result property="totalPrice" column="totalPrice"></result>-->
+<!--        <result property="providerName" column="proName"></result>-->
+<!--        <association property="provider" javaType="provider">-->
+<!--            <result property="proCode" column="proCode"></result>-->
+<!--            <result property="proName" column="proName"></result>-->
+<!--            <result property="proContact" column="proContact"></result>-->
+<!--            <result property="proPhone" column="proPhone"></result>-->
+<!--        </association>-->
+<!--    </resultMap>-->
+<!--    <select id="selectByProductNameBills" resultMap="billTest" parameterType="string">-->
+<!--        select * from smbms_bill b,smbms_provider p where b.productName like concat('%',#{productName},'%') and b.providerId = p.id;-->
+<!--    </select>-->
+
+
+    <!--    user集合映射-->
+    <select id="selectByAddress"  resultMap="userMapping">
+        select * from
+            smbms_user u,
+            smbms_address a
+                <trim prefix="where" suffix="and u.id = a.userid;">
+                    <if test="id != null">
+                        u.id = #{id}
+                    </if>
+                </trim>
+    </select>
+    <!--    根据地址id查询-->
+    <resultMap id="userMapping" type="user">
+        <result property="id" column="id"></result>
+        <result property="userCode" column="userCode"></result>
+        <result property="userName" column="userName"></result>
+        <result property="userPassword" column="userPassword"></result>
+        <result property="userRole" column="userRole"></result>
+        <association property="role" resultMap="roleMapping"></association>
+        <collection property="list" ofType="address">
+            <result property="contact" column="contact"></result>
+            <result property="addressDesc" column="addressDesc"></result>
+        </collection>
+    </resultMap>
+
+<!--    <resultMap id="providerMapping" type="provider">-->
+<!--        <result property="id" column="id"></result>-->
+<!--        <result property="proCode" column="proCode"></result>-->
+<!--        <result property="proName" column="proName"></result>-->
+<!--        <result property="proContact" column="proContact"></result>-->
+<!--        <result property="proPhone" column="proPhone"></result>-->
+<!--        <collection property="billList" ofType="bill">-->
+<!--            <result property="billCode" column="billCode"></result>-->
+<!--            <result property="productName" column="productName"></result>-->
+<!--            <result property="totalPrice" column="totalPrice"></result>-->
+<!--            <result property="isPayment" column="isPayment"></result>-->
+<!--        </collection>-->
+<!--    </resultMap>-->
+
+<!--    <select id="selectByProviderId" resultMap="providerMapping">-->
+<!--        select * from smbms_provider p, smbms_bill b where p.id = b.providerId and p.id = #{id};-->
+<!--    </select>-->
+
+
+</mapper>
